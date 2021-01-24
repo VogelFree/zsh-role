@@ -1,0 +1,60 @@
+---
+# This is an example playbook to execute Ansible tests.
+
+- name: Verify
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Get installed packages
+      package_facts:
+        manager: "auto"
+
+    - name: Check if zsh is installed
+      assert:
+        that: "'zsh' in ansible_facts.packages"
+
+    - name: Check if zsh is the default terminal
+      assert:
+        that: "{{ 'zsh' in lookup('env', 'SHELL') }}"
+
+    - name: Get the zsh installer
+      stat:
+        path: "/tmp/oh-my-zsh-installer.sh"
+      register: ohMyZshInstaller
+
+    - name:
+      assert:
+        that: ohMyZshInstaller.stat.exists
+        that: ohMyZshInstaller.stat.mode == "0777"
+
+    - name: Get the oh-my-zsh config folder
+      stat:
+        path: "~/.oh-my-zsh"
+      register: ohMyZshConfigFolder
+
+    - name: Check if folder exists
+      assert:
+        that: ohMyZshConfigFolder.stat.exists
+
+    - name: Get the zsh config folder
+      stat:
+        path: "/opt/config/zsh"
+      register: zsh_config_repo
+
+    - name: Check if config repo exists
+      assert:
+        that: zsh_config_repo.stat.exists
+
+    - name: Get the zsh config file link from home folder
+      stat:
+        path: ~/.zshrc
+      register: zsh_config_file_link
+
+    - debug:
+        var=zsh_config_file_link.stat
+
+    - name: Check the zsh config file link
+      assert:
+        that: zsh_config_file_link.stat.islnk
+        that: zsh_config_file_link.stat.exists
+        that: zsh_config_file_link.stat.lnk_source == "/opt/config/zsh/zshrc"

@@ -1,0 +1,46 @@
+---
+- name: Converge
+  hosts: all
+  tasks:
+    - name: "Create folder for dummy bare repo"
+      file:
+        path: "/tmp/zsh-config"
+        state: directory
+
+    - name: "Create dummy config repo"
+      shell:
+        cmd: "git init --bare"
+        chdir: "/tmp/zsh-config"
+
+    - name: "Clone dummy repo"
+      git:
+        repo: "/tmp/zsh-config"
+        dest: "/tmp/git.zsh-config"
+      ignore_errors: true
+
+    - name: "Set Config"
+      shell:
+        cmd: "git config user.email \"you@example.com\" && git config user.name \"Your Name\""
+        chdir: "/tmp/git.zsh-config"
+
+    - name: "Create dummy zsh config"
+      file:
+        path: "/tmp/git.zsh-config/zshrc"
+        state: touch
+
+    - name: "Create dummy branch"
+      shell:
+        cmd: "git checkout -b master"
+        chdir: "/tmp/git.zsh-config"
+      ignore_errors: true
+
+    - name: "Commit initial commit"
+      shell:
+        cmd: "git add . && git commit --allow-empty -m 'Initial commit' && git push --set-upstream origin master"
+        chdir: "/tmp/git.zsh-config"
+
+    - name: "Include zsh-role"
+      include_role:
+        name: "zsh-role"
+      vars:
+        config_repo: "/tmp/zsh-config"

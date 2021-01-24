@@ -1,0 +1,45 @@
+---
+- name: Install zsh package
+  package:
+    name:
+      - zsh
+      - which
+  become: true
+
+- name: Get current installed zsh
+  shell: "which $SHELL"
+  register: zsh_shell
+
+- name: Set users default shell to zsh
+  user:
+    name: "{{ ansible_user_id }}"
+    shell: zsh_shell
+  become: true
+
+- name: Downloader the oh-my-zsh installer
+  get_url:
+    url: "https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh"
+    dest: "/tmp/oh-my-zsh-installer.sh"
+    mode: "0777"
+
+- name: Install oh-my-zsh
+  shell:
+    cmd: "/tmp/oh-my-zsh-installer.sh '' --unattend"
+  when: lookup('env', 'ZSH') is not defined
+
+- name: "Clone zshrc config file"
+  git:
+    repo: "{{ config_repo }}"
+    dest: "/opt/config/zsh"
+  become: true
+
+  #- name: "Remove old zsh config"
+  #  file:
+  #    path: "~/.zshrc"
+  #    state: absent
+
+- name: "Link zsh config"
+  file:
+    path: ~/.zshrc
+    src: "/opt/config/zsh/zshrc"
+    state: link
