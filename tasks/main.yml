@@ -22,6 +22,13 @@
     dest: "/tmp/oh-my-zsh-installer.sh"
     mode: "0777"
 
+- name: Create config folder
+  file:
+    path: "/opt/config"
+    state: directory
+    owner: "{{ ansible_user_id }}"
+  become: true
+
 - name: Install oh-my-zsh
   shell:
     cmd: "/tmp/oh-my-zsh-installer.sh '' --unattend"
@@ -31,7 +38,6 @@
   git:
     repo: "{{ config_repo }}"
     dest: "/opt/config/zsh"
-  become: true
 
   #- name: "Remove old zsh config"
   #  file:
@@ -43,3 +49,4 @@
     path: ~/.zshrc
     src: "/opt/config/zsh/zshrc"
     state: link
+    force: yes
